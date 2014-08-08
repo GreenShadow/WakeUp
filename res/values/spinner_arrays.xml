@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="change_number">
+        <item>2次</item>
+        <item>3次</item>
+        <item>4次（默认）</item>
+        <item>5次</item>
+        <item>6次</item>
+    </string-array>
+
+</resources>
