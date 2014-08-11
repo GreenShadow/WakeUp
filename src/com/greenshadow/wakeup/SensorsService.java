@@ -35,24 +35,16 @@ public class SensorsService extends Service implements SensorEventListener {
 	private int counter;// 计数器
 	private boolean inLockAcquireTime = false; // 判断是否在wl获取权限的时间内
 
-	private SensorManager sm;// 传感器管理器
-	private PowerManager pm;// 电源管理器
+	public SensorManager sm;// 传感器管理器
 	private PowerManager.WakeLock wl;// 唤醒锁
-
 	private ScreenOnOffListener screenListener;// 屏幕监听器
 
-	private Notification notification;// 通知
+	private Notification notification;
 	private Timer timer;
 
 	@Override
 	public void onCreate() {
 		sm = (SensorManager) getSystemService(SENSOR_SERVICE); // 传感器管理器
-
-		pm = (PowerManager) getSystemService(POWER_SERVICE);// 电源管理器
-		wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP
-				| PowerManager.FULL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE,
-				"bright"); // wakelock对象
-
 		screenListener = new ScreenOnOffListener(this); // 实例化屏幕监听对象
 
 		// 用Notification.Builder创建一个通知
@@ -83,7 +75,7 @@ public class SensorsService extends Service implements SensorEventListener {
 	}
 
 	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) { // onStartCommand方法，生命周期的一部分
+	public int onStartCommand(Intent intent, int flags, int startId) {
 		SharedPreferences settings = getSharedPreferences("settings",
 				Activity.MODE_PRIVATE);
 		number = settings.getInt("number", 4);// 从设置文件中读取数据
@@ -92,20 +84,19 @@ public class SensorsService extends Service implements SensorEventListener {
 
 		screenListener.requestScreenStateUpdate(new ScreenStateListener() {// 注册屏幕监听
 					@Override
-					public void onScreenOn() {
+					public void onScreenOn() { // 开屏时注销传感器的监听
 						sm.unregisterListener(SensorsService.this,
 								sm.getDefaultSensor(Sensor.TYPE_PROXIMITY));
 					}
 
 					@Override
-					public void onScreenOff() {
+					public void onScreenOff() { // 关屏时重新注册传感器监听
 						sm.registerListener(SensorsService.this,
 								sm.getDefaultSensor(Sensor.TYPE_PROXIMITY),
 								SensorManager.SENSOR_DELAY_FASTEST);
 
-						/**
-						 * 如果在这个时间内则表明是由本服务将设备唤醒的，且在自动释放wl锁之前，所以要主动释放wl锁并注销timer
-						 * */
+						// 如果在这个时间内则表明是由本服务将设备唤醒的，且在自动释放wl锁之前，
+						// 所以要在关屏时主动释放wl锁并注销timer
 						if (inLockAcquireTime) {
 							wl.release(); // 释放
 							inLockAcquireTime = false;
@@ -115,9 +106,8 @@ public class SensorsService extends Service implements SensorEventListener {
 						}
 					}
 				});
-
 		startForeground(1, notification); // 服务常驻后台
-		Log.v("123456789", "开始服务 start service");
+		Log.v("123456789", "开始服务 onStartCommand");
 		state = true;
 		return super.onStartCommand(intent, flags, startId);
 	}
@@ -125,13 +115,14 @@ public class SensorsService extends Service implements SensorEventListener {
 	@Override
 	public void onDestroy() {// 注销服务
 		stopForeground(true); // 取消服务常驻内存
-		Log.v("123456789", "停止服务 stop service");
+		screenListener.stopScreenStateUpdate(); // 注销屏幕监听
+		Log.v("123456789", "停止服务 onDestroy");
 		super.onDestroy();
 		state = false;
 	}
 
 	@Override
-	public IBinder onBind(Intent intent) {// onBind，生命周期必须重写的方法
+	public IBinder onBind(Intent intent) {
 		return null;
 	}
 
@@ -141,10 +132,10 @@ public class SensorsService extends Service implements SensorEventListener {
 		long now;// 现在的系统时间
 
 		if (event.sensor.getType() == Sensor.TYPE_PROXIMITY) {
-			if (value > 0) {// 大于0就是远
-				Log.v("123456789", "远离 far away");// 添加LogCat
-			} else {// 等于0就是近
-				Log.v("123456789", "接近 close");// 添加LogCat
+			if (value > 0) {
+				Log.v("123456789", "远离 far away");
+			} else {
+				Log.v("123456789", "接近 close");
 				now = System.currentTimeMillis();// 获取系统时间
 				if ((now - later) < sensitivityValue) {// 如果时间差小于灵敏度阀值
 					counter++;// 计数器自增
@@ -161,16 +152,21 @@ public class SensorsService extends Service implements SensorEventListener {
 	}
 
 	@Override
-	public void onAccuracyChanged(Sensor sensor, int accuracy) {// 传感器精度变化监听器，必须重写的方法
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
 	}
 
 	private void Light() {
 		if (!inLockAcquireTime) {
+			PowerManager pm;
+			pm = (PowerManager) getSystemService(POWER_SERVICE);// 电源管理器
+			wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP
+					| PowerManager.FULL_WAKE_LOCK, "bright"); // wakelock锁
+			wl.setReferenceCounted(false);
 			wl.acquire();// 点亮，这里是永久点亮，所以必须注销
 			inLockAcquireTime = true;
 			Log.v("123456789", "inLockAcquireTime 为 true");
 			timer = new Timer();
-			timer.schedule(new TimerTask() { // 为timer注册一个task，延迟15秒执行，15秒之后注销wl锁
+			timer.schedule(new TimerTask() { // 利用timer延迟15秒执行，15秒之后注销wl锁
 						@Override
 						public void run() {
 							wl.release();

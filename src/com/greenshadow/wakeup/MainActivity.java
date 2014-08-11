@@ -1,3 +1,6 @@
+/**
+ * 交互界面
+ * */
 package com.greenshadow.wakeup;
 
 import android.app.Activity;
@@ -5,6 +8,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -28,15 +32,15 @@ public class MainActivity extends Activity {
 	private TextView sensitivity;
 	private Spinner spinner;
 
-	private int number;// 接近次数
-	private long sensitivityValue;// 灵敏度阀值（seekBar值）
 	private Intent serviceIntent;
 
 	/**
 	 * 存储SharedPreferences设置数据，文件位置 /data/data/包名/shared_prefs/*.xml
 	 * 
-	 * 设置数据有三个：BOOT_START(boolean)判断开机是否自启 number(int)记录接近次数
-	 * sensitivityValue(long)记录灵敏度阀值
+	 * 设置数据有三个：BOOT_START(boolean)判断开机是否自启；number(int)记录接近次数；sensitivityValue(
+	 * long)记录灵敏度阀值
+	 * 
+	 * SharedPreferences中存数的数据为屏幕显示的数据，不是控件返回的值
 	 * */
 	private SharedPreferences settings;
 
@@ -74,20 +78,8 @@ public class MainActivity extends Activity {
 										public void onClick(
 												DialogInterface dialog,
 												int which) {
-											number = spinner
-													.getSelectedItemPosition() + 2;
-											sensitivityValue = seekBar
-													.getProgress();
-
-											Editor editor = settings.edit();// 以下几行为写入设置数据文件
-											editor.putInt("number", number);
-											editor.putLong("sensitivityValue",
-													sensitivityValue);
-											editor.putBoolean("BOOT_START",
-													true);
-											editor.commit();// 保存文件
-
 											startService(serviceIntent);// 打开服务
+											FlushSharedPreferences(false);
 										}
 									})
 							.setNegativeButton("取消", new OnClickListener() { // 取消的点击监听
@@ -114,10 +106,7 @@ public class MainActivity extends Activity {
 									}).show();
 				} else {
 					stopService(serviceIntent);
-
-					Editor editor = settings.edit();
-					editor.putBoolean("BOOT_START", false); // 将开机自启改为false
-					editor.commit();
+					FlushSharedPreferences(false);
 				}
 			}
 		});
@@ -143,6 +132,8 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onDestroy() { // 结束activity
+		if (!SensorsService.isRunning())
+			System.exit(0);
 		Log.v("123456789", "onDestroy");
 		super.onDestroy();
 	}
@@ -183,16 +174,9 @@ public class MainActivity extends Activity {
 
 	public void save_ButtonClick(View v) {// 保存设置按钮
 		if (v.getId() == R.id.button_save) {
-			number = spinner.getSelectedItemPosition() + 2;
-			sensitivityValue = seekBar.getProgress();
 			if (SensorsService.isRunning()) // 如果服务正在运行则重新调用服务的onStartCommand方法
 				startService(serviceIntent);
-
-			Editor editor = settings.edit();
-			editor.putInt("number", spinner.getSelectedItemPosition() + 2);
-			editor.putLong("sensitivityValue", seekBar.getProgress());
-			editor.putBoolean("BOOT_START", SensorsService.isRunning());
-			editor.commit();
+			FlushSharedPreferences(false);
 		}
 	}
 
@@ -200,10 +184,25 @@ public class MainActivity extends Activity {
 		if (v.getId() == R.id.button_restore) {
 			seekBar.setProgress(500);
 			spinner.setSelection(2);
-			Editor editor = settings.edit();
-			editor.clear();
-			editor.putBoolean("BOOT_START", SensorsService.isRunning()); // 将自启状态改为目前服务运行状态
-			editor.commit();
+			FlushSharedPreferences(true);
 		}
+	}
+
+	/**
+	 * 刷新SharedPreferences中的数据
+	 * 
+	 * boolean clear：是否为清除模式
+	 * */
+	private void FlushSharedPreferences(boolean clear) {
+		Editor editor = settings.edit();
+		if (clear) {
+			editor.clear(); // 清空
+			editor.putBoolean("BOOT_START", SensorsService.isRunning()); // 将自启状态改为目前服务运行状态
+		} else {
+			editor.putInt("number", spinner.getSelectedItemPosition() + 2); // 接近次数
+			editor.putLong("sensitivityValue", seekBar.getProgress()); // 灵敏度阀值
+			editor.putBoolean("BOOT_START", SensorsService.isRunning()); // 开机自启状态
+		}
+		editor.commit(); // 提交
 	}
 }

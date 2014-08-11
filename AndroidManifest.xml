@@ -1,10 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.greenshadow.wakeup"
-    android:versionCode="3"
-    android:versionName="1.9(Beta)" >
+    android:versionCode="4"
+    android:versionName="2.0" >
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-sdk
@@ -32,20 +31,9 @@
         <service android:name="com.greenshadow.wakeup.SensorsService" >
         </service>
 
-        <receiver android:name="com.greenshadow.wakeup.ScreenOnOffListener" >
-            <intent-filter>
-                <action android:name="android.intent.action.SCREEN_ON" />
-                <action android:name="android.intent.action.SCREEN_OFF" />
-            </intent-filter>
-        </receiver>
         <receiver android:name="com.greenshadow.wakeup.BootBroadcastReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="com.greenshadow.wakeup.LstenPhoneStateBroadcastReceiver" >
-            <intent-filter>
-                <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>
     </application>
