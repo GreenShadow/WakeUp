@@ -78,7 +78,7 @@ public class MainActivity extends Activity {
 												DialogInterface dialog,
 												int which) {
 											startService(serviceIntent);// 打开服务
-											FlushSharedPreferences(false);
+											FlushSharedPreferences(false, true);
 										}
 									})
 							.setNegativeButton("取消", new OnClickListener() { // 取消的点击监听
@@ -105,7 +105,7 @@ public class MainActivity extends Activity {
 									}).show();
 				} else {
 					stopService(serviceIntent);
-					FlushSharedPreferences(false);
+					FlushSharedPreferences(false, false);
 				}
 			}
 		});
@@ -175,7 +175,7 @@ public class MainActivity extends Activity {
 		if (v.getId() == R.id.button_save) {
 			if (SensorsService.isRunning()) // 如果服务正在运行则重新调用服务的onStartCommand方法
 				startService(serviceIntent);
-			FlushSharedPreferences(false);
+			FlushSharedPreferences(false, SensorsService.isRunning());
 		}
 	}
 
@@ -183,16 +183,19 @@ public class MainActivity extends Activity {
 		if (v.getId() == R.id.button_restore) {
 			seekBar.setProgress(500);
 			spinner.setSelection(2);
-			FlushSharedPreferences(true);
+			FlushSharedPreferences(true, SensorsService.isRunning());
 		}
 	}
 
 	/**
 	 * 刷新SharedPreferences中的数据
 	 * 
-	 * boolean clear：是否为清除模式
+	 * @param clear
+	 *            是否为清除模式
+	 * @param boot
+	 *            开机自启模式
 	 * */
-	private void FlushSharedPreferences(boolean clear) {
+	private void FlushSharedPreferences(boolean clear, boolean boot) {
 		Editor editor = settings.edit();
 		if (clear) {
 			editor.clear(); // 清空
@@ -200,7 +203,7 @@ public class MainActivity extends Activity {
 		} else {
 			editor.putInt("number", spinner.getSelectedItemPosition() + 2); // 接近次数
 			editor.putLong("sensitivityValue", seekBar.getProgress()); // 灵敏度阀值
-			editor.putBoolean("BOOT_START", SensorsService.isRunning()); // 开机自启状态
+			editor.putBoolean("BOOT_START", boot); // 开机自启状态
 		}
 		editor.commit(); // 提交
 	}

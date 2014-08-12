@@ -1,3 +1,8 @@
+更新 version 2.0.1：
+修复开机不能自启的bug，为FlushSharedPreferences方法增加了一个参数用来传递开机自启的状态
+2.0.1 apk下载：http://pan.baidu.com/s/1i3DrgUx
+原2.0下载链接已删除
+
 更新 version 2.0：
 将wakelock放到Light方法下初始化
 重构写入SharedPreferences的代码
@@ -9,8 +14,6 @@ manifest里删除多余的ScreenOnOffListener receiver注册
 还有一些零碎的修改
 
 预计下一步要控制可否发出通知，虽然我认为常驻后台还不提示是十分流氓的行为，但是所有人都说那个通知好烦
-
-2.0 apk下载：http://pan.baidu.com/s/1kTLu4fl
 
 version 1.9(Beat)
 

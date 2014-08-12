@@ -70,8 +70,8 @@ public class SensorsService extends Service implements SensorEventListener {
 				.setContentText("服务正在运行 点击展开设置");
 		notification = builder.getNotification();
 
-		super.onCreate();
 		state = true;
+		super.onCreate();
 	}
 
 	@Override
