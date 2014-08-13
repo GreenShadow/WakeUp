@@ -9,25 +9,9 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="3dp"
-        android:text="提示"
-        android:textSize="25sp" />
-
-    <View
-        android:layout_width="wrap_content"
-        android:layout_height="2dp"
-        android:background="?android:attr/listDividerAlertDialog" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
         android:text="开启服务会常驻内存！"
         android:textColor="#ff0000"
-        android:textSize="20sp" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="确定开启请按确定，否则请取消。\n\n开启服务后会在通知栏显示一条通知用来显示服务的状态，如您觉得打扰，请执行以下步骤：\n长按该通知->选择“应用信息”->反选 “显示通知”" />
+        android:textSize="30sp" />
 
 </LinearLayout>

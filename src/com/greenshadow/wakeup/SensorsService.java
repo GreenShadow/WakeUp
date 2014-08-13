@@ -81,6 +81,11 @@ public class SensorsService extends Service implements SensorEventListener {
 		number = settings.getInt("number", 4);// 从设置文件中读取数据
 		sensitivityValue = settings.getLong("sensitivityValue", 500);
 		flags = Service.START_REDELIVER_INTENT; // 服务被杀死后重启时保留intent对象。这里似乎只用粘性标记就可以了？
+		int ID;
+		if (settings.getBoolean("notification", true))
+			ID = 1;
+		else
+			ID = 0;
 
 		screenListener.requestScreenStateUpdate(new ScreenStateListener() {// 注册屏幕监听
 					@Override
@@ -106,7 +111,7 @@ public class SensorsService extends Service implements SensorEventListener {
 						}
 					}
 				});
-		startForeground(1, notification); // 服务常驻后台
+		startForeground(ID, notification); // 服务常驻后台
 		Log.v("123456789", "开始服务 onStartCommand");
 		state = true;
 		return super.onStartCommand(intent, flags, startId);

@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
@@ -30,6 +31,7 @@ public class MainActivity extends Activity {
 	private SeekBar seekBar;
 	private TextView sensitivity;
 	private Spinner spinner;
+	private CheckBox checkBox;
 
 	private Intent serviceIntent;
 
@@ -55,16 +57,16 @@ public class MainActivity extends Activity {
 		seekBar = (SeekBar) findViewById(R.id.seek_bar);
 		sensitivity = (TextView) findViewById(R.id.sensitivity_value);
 		spinner = (Spinner) findViewById(R.id.spinner);
+		checkBox = (CheckBox) findViewById(R.id.check_box);
 
-		settings = getSharedPreferences("settings", Activity.MODE_PRIVATE);// 建立设置数据文件，命名为settings.xml
-		seekBar.setProgress((int) settings.getLong("sensitivityValue", 500));// 从设置文件中读取，若不存在默认500
-		spinner.setSelection(settings.getInt("number", 4) - 2);// 同上
-		if (SensorsService.isRunning())// 判断服务状态
+		settings = getSharedPreferences("settings", Activity.MODE_PRIVATE);
+
+		if (SensorsService.isRunning())
 			switcher.setChecked(true);
 		switcher.setOnCheckedChangeListener(new OnCheckedChangeListener() {// 开关变化监听器
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView,
-					final boolean isChecked) {
+					boolean isChecked) {
 				if (isChecked) {
 					new AlertDialog.Builder(mainActivity)
 							// 展开一个对话框
@@ -109,14 +111,30 @@ public class MainActivity extends Activity {
 				}
 			}
 		});
-
+		checkBox.setChecked(settings.getBoolean("notification", true));
+		checkBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView,
+					boolean isChecked) {
+				if (isChecked) {
+					if (SensorsService.isRunning())
+						startService(serviceIntent);
+					FlushSharedPreferences(false, SensorsService.isRunning());
+				} else {
+					if (SensorsService.isRunning())
+						startService(serviceIntent);
+					FlushSharedPreferences(false, SensorsService.isRunning());
+				}
+			}
+		});
+		seekBar.setProgress((int) settings.getLong("sensitivityValue", 500));
 		seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {// 拖动条改变监听器
 			@Override
-			public void onStopTrackingTouch(SeekBar seekBar) { // 停止拖动时 必须重写的方法
+			public void onStopTrackingTouch(SeekBar seekBar) {
 			}
 
 			@Override
-			public void onStartTrackingTouch(SeekBar seekBar) { // 开始拖动时 必须重写的方法
+			public void onStartTrackingTouch(SeekBar seekBar) {
 			}
 
 			@Override
@@ -125,8 +143,8 @@ public class MainActivity extends Activity {
 				sensitivity.setText("" + (progress));
 			}
 		});
-
 		sensitivity.setText("" + (seekBar.getProgress())); // 启动时设置SeekBar右边TextBox的值
+		spinner.setSelection(settings.getInt("number", 4) - 2);// 同上
 	}
 
 	@Override
@@ -204,6 +222,7 @@ public class MainActivity extends Activity {
 			editor.putInt("number", spinner.getSelectedItemPosition() + 2); // 接近次数
 			editor.putLong("sensitivityValue", seekBar.getProgress()); // 灵敏度阀值
 			editor.putBoolean("BOOT_START", boot); // 开机自启状态
+			editor.putBoolean("notification", checkBox.isChecked());
 		}
 		editor.commit(); // 提交
 	}

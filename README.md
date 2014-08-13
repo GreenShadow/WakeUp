@@ -1,7 +1,9 @@
+更新 version 2.0.3
+增加打开通知的开关，删除一些注释
+去掉所有的apk下载链接，取消对bin文件夹的屏蔽，下载apk去/bin下寻找吧～
+
 更新 version 2.0.1：
 修复开机不能自启的bug，为FlushSharedPreferences方法增加了一个参数用来传递开机自启的状态
-2.0.1 apk下载：http://pan.baidu.com/s/1i3DrgUx
-原2.0下载链接已删除
 
 更新 version 2.0：
 将wakelock放到Light方法下初始化
